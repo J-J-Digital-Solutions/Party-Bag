@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<head>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Atma:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/global.css">
+    <link rel="stylesheet" href="../static/product.css">
+    </head>
+
+    <div class="product">
+        <div class="product-hero">
+            <img src="hero-image.jpg" alt="Product" width="400" height="400">
+            <div class="product-images">
+                <img src="hero-image.jpg" alt="Small Product" width="100" height="100">
+                <img style="margin-inline: 1vh;" src="hero-image.jpg" alt="Small Product" width="100" height="100">
+                <img src="hero-image.jpg" alt="Small Product" width="100" height="100">
+            </div>
+        </div>
+        <div>
+            <h3>Test Party Bag</h3>
+            <p>
+                Includes:
+                Something
+                Something
+                Something
+            </p>
+            <button>Add to cart</button>
+        </div>
+    </div>
+
+{% endblock %}

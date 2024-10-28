@@ -1,0 +1,26 @@
+.sub-menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 1vh 50vh;
+    font-size: 2vh;
+    background-color: #F9B9B7;
+}
+
+.main-menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 2vh 30vh;
+    font-size: 3vh;
+}
+
+.upper-menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 1vh 50vh;
+    font-size: 2vh;
+    background-color: #96C9DC;
+}
+
+.duo-links a {
+    padding: 0vh 1vh;
+}
