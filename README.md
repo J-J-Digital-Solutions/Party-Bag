@@ -1,1 +1,0 @@
-jaimisi arnaulluni aippaqaqtuq
