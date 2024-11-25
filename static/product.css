@@ -16,4 +16,17 @@
 .product-images {
     display: flex;
     margin-top: 1vh;
+    border-radius: 5px;
+}
+
+/* .stock {
+STYLES FOR STOCK
+} */
+
+.stock .red{
+    color: red;
+}
+
+.stock .green{
+    color: green;
 }

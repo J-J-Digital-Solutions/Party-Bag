@@ -21,7 +21,7 @@
         </div>
     </div>
     <div>
-        <h3>{{ product.name }}</h3>
+        <h1>{{ product.name }}</h1>
         
         <p>
             Includes:
@@ -29,12 +29,16 @@
         </p>
 
         <p>£{{ product.price }}</p>
-        
-        {% if product.stock %}
-            <p>In stock</p>
-        {% else %}
-            <p>Out of stock</p>
-        {% endif %}
+        <div class="stock">
+            {% if product.stock %}
+                <p class="green">In stock</p>
+            {% else %}
+                <p class="red">Out of stock</p>
+            {% endif %}
+        </div>
+
+        <p>Quantity:</p>
+        <input type="number" value="1" min="1" max="10">
 
         <button>Add to cart</button>
     </div>

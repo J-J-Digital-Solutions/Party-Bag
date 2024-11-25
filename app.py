@@ -63,11 +63,13 @@ def add_product(name, description, image, price, stock):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-        add_product(
-            name="Test Product 1",
-            description="A sample product.",
-            image="imgs/product_imgs/test.png",
-            price=19.99,
-            stock=True
-        )
+        ################################## ADDING PRODUCTS ##################################
+        # add_product(
+        #     name="Test Product 1",
+        #     description="A sample product.",
+        #     image="imgs/product_imgs/test.png",
+        #     price=19.99,
+        #     stock=True
+        # )
+        ################################## ADDING PRODUCTS ##################################
     app.run(host='0.0.0.0', port=81)
