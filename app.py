@@ -7,11 +7,15 @@ import stripe
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.root_path, 'database/products.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'ht7r884932t7cr84392tbrc743829tbrv473829btrcv743829bycr478329cnbyr78xm8u'
+UPLOAD_FOLDER = os.path.join(app.static_folder, 'imgs', 'product_imgs')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 stripe.api_key = "sk_test_51PuEkj03NN6R2KGdl6yihdeFRc0df3BXF2CHdBbTNQO5eGkqvn5rlp065zP1SXNsGTsYFOnmlg7zEob4fgD3ooZT00hBYbaaVa"
 
@@ -53,27 +57,111 @@ def add_product(name, description, image, price, stock):
     print(f"Product '{name}' added successfully.")
 ################################## ADDING PRODUCTS ##################################
 
+@app.route('/cart')
+def view_cart():
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    cart_items = []
+    for product_id, quantity in session['cart'].items():
+        product = Product.query.get(int(product_id))
+        if product:
+            cart_items.append({
+                'product': product,
+                'quantity': quantity
+            })
+
+    # Calculate a simple total
+    total = sum(item['product'].price * item['quantity'] for item in cart_items)
+    
+    return render_template('cart.html', cart_items=cart_items, total=total)
+
+
+@app.route('/cart/add/<int:product_id>', methods=['POST', 'GET'])
+def add_to_cart(product_id):
+    # Ensure 'cart' exists in session
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    product = Product.query.get_or_404(product_id)
+    product_id_str = str(product.id)
+
+    # Get the quantity from the form; default to 1 if not provided
+    quantity = request.form.get('quantity', '1')
+    quantity = int(quantity) if quantity.isdigit() else 1
+
+    # If it’s already in the cart, just increment, otherwise set it
+    if product_id_str in session['cart']:
+        session['cart'][product_id_str] += quantity
+    else:
+        session['cart'][product_id_str] = quantity
+
+    session.modified = True  # Mark the session as modified so changes persist
+
+    flash(f"Added {product.name} (x{quantity}) to cart!", "success")
+    return redirect(url_for('view_cart'))
+
+
+@app.route('/cart/remove/<int:product_id>', methods=['POST', 'GET'])
+def remove_from_cart(product_id):
+    if 'cart' in session:
+        product_id_str = str(product_id)
+        if product_id_str in session['cart']:
+            # Remove the product entirely
+            session['cart'].pop(product_id_str)
+            session.modified = True
+            flash("Item removed from cart.", "info")
+
+    return redirect(url_for('view_cart'))
+
+
+@app.route('/cart/update', methods=['POST'])
+def update_cart():
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    for field_name in request.form:
+        # field_name might be something like "quantity[42]"
+        if field_name.startswith("quantity[") and field_name.endswith("]"):
+            product_id = field_name[9:-1]  # extract the number between brackets
+            quantity_str = request.form[field_name]
+            try:
+                session['cart'][product_id] = int(quantity_str)
+            except ValueError:
+                # fallback if the user typed something invalid
+                pass
+
+    session.modified = True
+    flash("Cart updated!", "success")
+    return redirect(url_for('view_cart'))
+
+
 
 @app.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     try:
-        product_id = request.form.get('product_id')
-        quantity = int(request.form.get('quantity', 1))
-        product = Product.query.get_or_404(product_id)
-        
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
+        if 'cart' not in session or not session['cart']:
+            flash("Your cart is empty!", "error")
+            return redirect(url_for('view_cart'))
+
+        line_items = []
+        for product_id, quantity in session['cart'].items():
+            product = Product.query.get_or_404(product_id)
+            line_items.append({
                 'price_data': {
                     'currency': 'gbp',
                     'product_data': {
                         'name': product.name,
-                        'description': product.description,
+                        'description': product.description
                     },
                     'unit_amount': int(product.price * 100),
                 },
                 'quantity': quantity,
-            }],
+            })
+
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
             mode='payment',
             success_url='http://192.168.0.14:81/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url='http://192.168.0.14:81',
@@ -171,6 +259,8 @@ def success():
     except Exception as e:
         print(f'Failed to send email: {e}')
 
+    session['cart'] = {}
+    session.modified = True
     return redirect("/?success=true", code=302)
 
 
@@ -178,21 +268,21 @@ def success():
 def admin_login():
     if request.method == 'POST':
         admin_password = request.form.get('admin_password')
-        if admin_password == 'R0b1ns0n06*':
+        if admin_password == 'Password123':
             session['is_admin'] = True
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_dashboard'))
         else:
             flash('Incorrect admin password', 'error')
-
-    return render_template('admin_login.html')
+    return render_template('admin/admin_login.html')
 
 
 @app.route('/admin/dashboard')
-def admin():
+def admin_dashboard():
     if 'is_admin' not in session:
         return redirect(url_for('admin_login'))
     products = Product.query.all()
-    return render_template('admin_dashboard.html', products=products)
+    return render_template('admin/admin_dashboard.html', products=products)
+
 
 @app.route('/admin/product/new', methods=['GET', 'POST'])
 def admin_new_product():
@@ -201,14 +291,24 @@ def admin_new_product():
     if request.method == 'POST':
         name = request.form.get('name')
         description = request.form.get('description')
-        image = request.form.get('image')
-        price = float(request.form.get('price', 0.0))
-        stock = int(request.form.get('stock', 0))
+        image_file = request.files.get('image')
+
+        if image_file and image_file.filename:
+            filename = secure_filename(image_file.filename)
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(save_path)
+            image_path = f"imgs/product_imgs/{filename}"
+        else:
+            image_path = None 
+
+        price_str = request.form.get('price', '0.0')
+        price = float(price_str) if price_str else 0.0
+        stock = True if request.form.get('stock') == 'on' else False
 
         new_product = Product(
             name=name,
             description=description,
-            image=image,
+            image=image_path,
             price=price,
             stock=stock
         )
@@ -216,7 +316,7 @@ def admin_new_product():
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
 
-    return render_template('admin_edit_product.html', product=None)
+    return render_template('admin/admin_edit_product.html', product=None)
 
 
 @app.route('/admin/product/<int:product_id>/edit', methods=['GET', 'POST'])
@@ -227,13 +327,22 @@ def admin_edit_product(product_id):
     if request.method == 'POST':
         product.name = request.form.get('name')
         product.description = request.form.get('description')
-        product.image = request.form.get('image')
-        product.price = float(request.form.get('price', 0.0))
-        product.stock = int(request.form.get('stock', 0))
+
+        if request.files.get('image'):
+            image_file = request.files.get('image')
+            filename = secure_filename(image_file.filename)
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image_file.save(save_path)
+            product.image = f"imgs/product_imgs/{filename}"
+        else:
+            product.image = None
+
+        price_str = request.form.get('price', '0.0')
+        product.price = float(price_str) if price_str else 0.0
+        product.stock = True if request.form.get('stock') == 'on' else False
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
-
-    return render_template('admin_edit_product.html', product=product)
+    return render_template('admin/admin_edit_product.html', product=product)
 
 
 @app.route('/admin/product/<int:product_id>/delete', methods=['POST'])
