@@ -2,12 +2,11 @@
 {% block content %}
 
 <head>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Atma:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../static/global.css">
-    <link rel="stylesheet" href="../static/product.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='product.css') }}">
 </head>
 
 <div class="product">
@@ -23,37 +22,51 @@
                 </div>
             {% endfor %}
         </div>
-
     </div>
+
     <div>
         <h1>{{ product.name }}</h1>
-        
-        <p>
-            Includes:
-            {{ product.description }}
-        </p>
-
+        <p>Includes: {{ product.description }}</p>
         <p>£{{ product.price }}</p>
 
         <div class="stock">
             {% if product.stock %}
                 <p class="green">In stock</p>
                 <p>Quantity:</p>
+                
+                <!-- This single <input> is used for both forms -->
                 <input type="number" id="quantity" value="1" min="1" max="10">
+                
+                <!-- Small JS function to grab the quantity and assign it to both hidden inputs -->
+                <script>
+                  function updateQuantityInputs() {
+                    const q = document.getElementById('quantity').value;
+                    document.getElementById('quantity_cart').value = q;
+                    document.getElementById('quantity_buy_now').value = q;
+                  }
+                </script>
+                
+                <!-- Add to Cart -->
                 <form 
                     action="{{ url_for('add_to_cart', product_id=product.id) }}" 
                     method="POST"
-                    onsubmit="document.getElementById('quantity_form_input').value = document.getElementById('quantity').value"
+                    onsubmit="updateQuantityInputs();"
                 >
-                    <input type="hidden" id="quantity_form_input" name="quantity" value="1">
+                    <input type="hidden" id="quantity_cart" name="quantity" value="1">
                     <button type="submit">Add to cart</button>
                 </form>
 
-                <form action="/create-checkout-session" method="POST">
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <input type="hidden" id="quantity_input" name="quantity" value="1">
+                <!-- Buy Now -->
+                <form
+                    action="{{ url_for('buy_now', product_id=product.id) }}"
+                    method="POST"
+                    onsubmit="updateQuantityInputs();"
+                >
+                    <!-- This hidden field ensures the server knows how many to buy now -->
+                    <input type="hidden" id="quantity_buy_now" name="quantity" value="1">
                     <button type="submit" class="buy-now">Buy Now</button>
                 </form>
+
 
             {% else %}
                 <p class="red">Out of stock</p>

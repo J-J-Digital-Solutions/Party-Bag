@@ -136,7 +136,6 @@ def update_cart():
     return redirect(url_for('view_cart'))
 
 
-
 @app.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     try:
@@ -158,6 +157,44 @@ def create_checkout_session():
                 },
                 'quantity': quantity,
             })
+
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url='http://192.168.0.14:81/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='http://192.168.0.14:81',
+            billing_address_collection='required',
+            shipping_address_collection={'allowed_countries': ['GB']}
+        )
+
+        return redirect(checkout_session.url, code=303)
+
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/buy_now/<int:product_id>', methods=['POST'])
+def buy_now(product_id):
+    """
+    This route checks out a single product immediately (bypassing the cart).
+    """
+    try:
+        product = Product.query.get_or_404(product_id)
+
+        quantity = int(request.form.get('quantity', '1'))
+
+        line_items = [{
+            'price_data': {
+                'currency': 'gbp',
+                'product_data': {
+                    'name': product.name,
+                    'description': product.description
+                },
+                'unit_amount': int(product.price * 100),
+            },
+            'quantity': quantity,
+        }]
 
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -358,13 +395,4 @@ def admin_delete_product(product_id):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-        ################################## ADDING PRODUCTS ##################################
-        # add_product(
-        #     name="Test Product 1",
-        #     description="A sample product.",
-        #     image="imgs/product_imgs/test.png",
-        #     price=19.99,
-        #     stock=True
-        # )
-        ################################## ADDING PRODUCTS ##################################
     app.run(host='0.0.0.0', port=81)
