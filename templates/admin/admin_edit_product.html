@@ -34,6 +34,16 @@
         >{% if product %}{{ product.description }}{% endif %}</textarea>
         <br><br>
 
+        <label for="category">Category:</label><br>
+        <input
+          type="text"
+          id="category"
+          name="category"
+          value="{% if product %}{{ product.category }}{% endif %}"
+          required
+        >
+        <br><br>
+
         <label for="image">Product Image:</label><br>
         <input type="file" id="image" name="image">
         <br><br>
@@ -54,6 +64,7 @@
           type="checkbox"
           id="stock"
           name="stock"
+          checked
           {% if product and product.stock %}checked{% endif %}
         >
         <br><br>
