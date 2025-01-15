@@ -26,6 +26,7 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     description = db.Column(db.String(300))
+    category = db.Column(db.String(50))
     image = db.Column(db.String(100))
     price = db.Column(db.Float)
     stock = db.Column(db.Boolean)
@@ -328,6 +329,7 @@ def admin_new_product():
     if request.method == 'POST':
         name = request.form.get('name')
         description = request.form.get('description')
+        category = request.form.get("category")
         image_file = request.files.get('image')
 
         if image_file and image_file.filename:
@@ -345,6 +347,7 @@ def admin_new_product():
         new_product = Product(
             name=name,
             description=description,
+            category=category,
             image=image_path,
             price=price,
             stock=stock
