@@ -1,9 +1,11 @@
 .sub-menu {
     display: flex;
     justify-content: space-between;
-    padding: 1vh 50vh;
+    padding: 1vh 30vh;
     font-size: 2vh;
-    background-color: #F9B9B7;
+    border-top: 1px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+
 }
 
 .main-menu {
@@ -16,9 +18,9 @@
 .upper-menu {
     display: flex;
     justify-content: space-between;
-    padding: 1vh 50vh;
+    padding: 1vh 30vh;
     font-size: 2vh;
-    background-color: #96C9DC;
+    background-color: #000000;
 }
 
 .duo-links a {
