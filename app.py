@@ -162,8 +162,8 @@ def create_checkout_session():
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url='http://192.168.0.14:81/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://192.168.0.14:81',
+            success_url='http://192.168.4.121:81/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='http://192.168.4.121:81',
             billing_address_collection='required',
             shipping_address_collection={'allowed_countries': ['GB']}
         )
@@ -200,8 +200,8 @@ def buy_now(product_id):
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url='http://192.168.0.14:81/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://192.168.0.14:81',
+            success_url='http://192.168.4.121:81/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='http://192.168.4.121:81',
             billing_address_collection='required',
             shipping_address_collection={'allowed_countries': ['GB']}
         )
